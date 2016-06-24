@@ -3,7 +3,7 @@ require "bundler/source/mercurial/version"
 
 module Bundler
   class Source
-    class Mercurial < Bundler::Plugin::API
+    class Mercurial
 
       attr_reader :ref
 
@@ -11,6 +11,10 @@ module Bundler
         super
 
         @ref = options["tag"] || options["branch"] || "default"
+      end
+
+      def api
+        @api ||= Bundler::Plugin::API.new
       end
 
       def fetch_gemspec_files
@@ -30,10 +34,10 @@ module Bundler
       end
 
       def install(spec, opts)
-        mkdir_p(install_path.dirname)
-        rm_rf(install_path)
+        api.mkdir_p(install_path.dirname)
+        api.rm_rf(install_path)
         `hg clone #{cache_path} #{install_path}`
-        chdir install_path do
+        api.chdir install_path do
           `hg update -r #{changeset} 2>&1`
         end
 
@@ -50,12 +54,11 @@ module Bundler
     private
 
       def cache_path
-        @cache_path ||= cache_dir.join("soruce-mercurial", repo_name)
+        @cache_path ||= api.cache_dir.join("soruce-mercurial", repo_name)
       end
 
       def cache_repo
-
-        mkdir_p cache_path.dirname
+        api.mkdir_p cache_path.dirname
         `hg clone -U #{uri} #{cache_path} 2>&1`
       end
 
@@ -74,14 +77,14 @@ module Bundler
       def latest_changeset
         cache_repo unless cached?
 
-        chdir(cache_path) do
+        api.chdir(cache_path) do
           ENV["HGPLAIN"] = "true"
           `hg log -r #{ref} -T '{node}' 2>&1`
         end
       end
 
       def update_cache(changeset)
-        chdir(cache_path) do
+        api.chdir(cache_path) do
           `hg update -r #{changeset} 2>&1`
         end
       end
