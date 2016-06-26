@@ -32,6 +32,7 @@ RSpec.configure do |config|
 
   config.before :each do
     reset!
+    system_gems []
     in_app_root
   end
 

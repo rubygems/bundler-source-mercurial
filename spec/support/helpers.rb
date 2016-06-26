@@ -135,5 +135,41 @@ module Spec
       opts[:retry] ||= 0
       bundle :lock, opts
     end
+
+    def system_gems(*gems)
+      gems = gems.flatten
+
+      FileUtils.rm_rf(system_gem_path)
+      FileUtils.mkdir_p(system_gem_path)
+
+      Gem.clear_paths
+
+      env_backup = ENV.to_hash
+      ENV["GEM_HOME"] = system_gem_path.to_s
+      ENV["GEM_PATH"] = system_gem_path.to_s
+      ENV["BUNDLE_ORIG_GEM_PATH"] = nil
+
+      install_gems(*gems)
+      return unless block_given?
+      begin
+        yield
+      ensure
+        ENV.replace(env_backup)
+      end
+    end
+
+    def install_gems(*gems)
+      gems.each do |g|
+        path = "#{gem_repo1}/gems/#{g}.gem"
+
+        raise "OMG `#{path}` does not exist!" unless File.exist?(path)
+
+        gem_command :install, "--no-rdoc --no-ri --ignore-dependencies #{path}"
+      end
+    end
+
+    alias_method :install_gem, :install_gems
+
+
   end
 end
