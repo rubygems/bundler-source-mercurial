@@ -3,12 +3,8 @@ module Spec
   module Helpers
     def reset!
       Dir["#{tmp}/{gems/*,*}"].each do |dir|
-        next if %(base remote1 gems rubygems).include?(File.basename(dir))
-        if ENV["BUNDLER_SUDO_TESTS"]
-          `sudo rm -rf #{dir}`
-        else
-          FileUtils.rm_rf(dir)
-        end
+        next if %(base gems remote1 rubygems).include?(File.basename(dir))
+        FileUtils.rm_rf(dir)
       end
       FileUtils.mkdir_p(tmp)
       FileUtils.mkdir_p(home)
@@ -61,12 +57,8 @@ module Spec
         v == true ? " --#{k}" : " --#{k} #{v}" if v
       end.join
 
-      rubyopt = ENV["RUBYOPT"]
-      ENV["RUBYOPT"] = ENV["RUBYOPT"].sub "-rbundler/setup", ""
       cmd = "#{env} #{sudo} #{Gem.ruby} -I#{bundle_lib} #{requires_str} #{bundle_bin} #{cmd}#{args}"
       sys_exec(cmd, expect_err) {|i| yield i if block_given? }
-    ensure
-      ENV["RUBYOPT"] = rubyopt if rubyopt
     end
     bang :bundle
 
@@ -169,6 +161,16 @@ module Spec
     end
 
     alias_method :install_gem, :install_gems
+
+    def with_gem_path_as(path)
+      backup = ENV.to_hash
+      ENV["GEM_HOME"] = path.to_s
+      ENV["GEM_PATH"] = path.to_s
+      ENV["BUNDLE_ORIG_GEM_PATH"] = nil
+      yield
+    ensure
+      ENV.replace(backup)
+    end
 
 
   end

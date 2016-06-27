@@ -5,6 +5,40 @@ module Spec
       name.delete("-").upcase
     end
 
+    def build_repo1
+      build_repo gem_repo1 do
+        lib_path = Dir["#{Path.root}/pkg/bundler-source-mercurial*.gem"].first
+
+        if lib_path
+          FileUtils.mkdir_p("#{gem_repo1 }/gems")
+          FileUtils.cp lib_path, "#{gem_repo1}/gems/"
+        else
+          abort "You need to build the gem first. Run `rake build` and try again."
+        end
+
+      end
+    end
+
+    def build_repo(path, &blk)
+      return if File.directory?(path)
+
+      update_repo(path, &blk)
+    end
+
+    def update_repo(path)
+      return unless block_given?
+      @_build_path = "#{path}/gems"
+      yield
+      with_gem_path_as Path.base_system_gems do
+        Dir.chdir(path) { gem_command :generate_index }
+      end
+    ensure
+      @_build_path = nil
+    end
+
+    def build_gem(name, *args, &blk)
+      build_with(GemBuilder, name, args, &blk)
+    end
 
     def build_hg(name, *args, &block)
       build_with(MercurialBuilder, name, args, &block)
@@ -91,6 +125,29 @@ module Spec
 
       def _default_path
         @context.tmp("libs", @spec.full_name)
+      end
+    end
+
+    class GemBuilder < LibBuilder
+      def _build(opts)
+        lib_path = super(opts.merge(:path => @context.tmp(".tmp/#{@spec.full_name}"), :no_default => opts[:no_default]))
+        Dir.chdir(lib_path) do
+          destination = opts[:path] || _default_path
+          FileUtils.mkdir_p(destination)
+
+          @spec.authors = ["that guy"] if !@spec.authors || @spec.authors.empty?
+
+          Bundler.rubygems.build(@spec, opts[:skip_validation])
+          if opts[:to_system]
+            `gem install --ignore-dependencies --no-ri --no-rdoc #{@spec.full_name}.gem`
+          else
+            FileUtils.mv("#{@spec.full_name}.gem", opts[:path] || _default_path)
+          end
+        end
+      end
+
+      def _default_path
+        @context.gem_repo1("gems")
       end
     end
 

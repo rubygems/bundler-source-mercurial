@@ -8,6 +8,7 @@ Dir["#{File.expand_path("../support", __FILE__)}/*.rb"].each do |file|
   require file
 end
 
+ENV["RUBYOPT"] = ENV["RUBYOPT"].sub "-rbundler/setup", ""
 Spec::Rubygems.setup
 ENV["BUNDLE_PLUGINS"] = "true"
 ENV["BUNDLE_SPEC_RUN"] = "true"
@@ -17,6 +18,7 @@ RSpec.configure do |config|
   config.include Spec::Path
   config.include Spec::Helpers
   config.include Spec::Matchers
+  config.include Spec::Rubygems
 
   # Enable flags like --only-failures and --next-failure
   config.example_status_persistence_file_path = ".rspec_status"
@@ -25,9 +27,14 @@ RSpec.configure do |config|
   original_env = ENV.to_hash
 
   config.filter_run :focused => true unless ENV["CI"]
+  config.run_all_when_everything_filtered = true
 
   config.expect_with :rspec do |c|
     c.syntax = :expect
+  end
+
+  config.before :all do
+    build_repo1
   end
 
   config.before :each do

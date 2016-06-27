@@ -27,7 +27,11 @@ module Spec
 
     alias_method :bundled_app1, :bundled_app
 
-    # Workarounds till source plugins get merged with master
+    def gem_repo1(*args)
+      tmp("gems/remote1", *args)
+    end
+
+    # Workarounds till source plugins get merged with bundler master
     def bundle_bin
       @bundle_bin ||= File.expand_path("../exe/bundle", bundle_lib)
     end
