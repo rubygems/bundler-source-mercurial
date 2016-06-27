@@ -3,8 +3,8 @@ require "bundler/source/mercurial/version"
 
 module Bundler
   class Source
+    # Class that handled the mercurial source for bundler
     class Mercurial
-
       attr_reader :ref
 
       def initialize(opts)

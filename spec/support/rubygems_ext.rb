@@ -7,13 +7,13 @@ module Spec
     DEPS = {
       "rake" => "10.0.2",
       "builder" => "2.1.2",
-    }
+    }.freeze
 
     def self.setup
       Gem.clear_paths
 
       ENV["BUNDLE_PATH"] = nil
-      ENV['BUNDLE_GEMFILE'] = nil
+      ENV["BUNDLE_GEMFILE"] = nil
       ENV["GEM_HOME"] = ENV["GEM_PATH"] = Path.base_system_gems.to_s
       ENV["PATH"] = ["#{Path.root}/exe", "#{Path.system_gem_path}/bin", ENV["PATH"]].join(File::PATH_SEPARATOR)
 

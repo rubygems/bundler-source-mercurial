@@ -44,20 +44,17 @@ module Spec
 
     def bundle(cmd, options = {})
       expect_err = options.delete(:expect_err)
-      with_sudo = options.delete(:sudo)
-      sudo = with_sudo == :preserve_env ? "sudo -E" : "sudo" if with_sudo
 
       options["no-color"] = true unless options.key?("no-color") || cmd.to_s.start_with?("exec", "exe", "ex", "e", "conf")
 
-      requires = options.delete(:requires) || []
-      requires_str = requires.map {|r| "-r#{r}" }.join(" ")
-
       env = (options.delete(:env) || {}).map {|k, v| "#{k}='#{v}'" }.join(" ")
       args = options.map do |k, v|
-        v == true ? " --#{k}" : " --#{k} #{v}" if v
+        if v
+          v == true ? " --#{k}" : " --#{k} #{v}"
+        end
       end.join
 
-      cmd = "#{env} #{sudo} #{Gem.ruby} -I#{bundle_lib} #{requires_str} #{bundle_bin} #{cmd}#{args}"
+      cmd = "#{env} #{Gem.ruby} -I#{bundle_lib} #{bundle_bin} #{cmd}#{args}"
       sys_exec(cmd, expect_err) {|i| yield i if block_given? }
     end
     bang :bundle
@@ -81,7 +78,7 @@ module Spec
         @exitstatus = wait_thr && wait_thr.value.exitstatus
       end
 
-      puts @err unless expect_err || @err.empty? || !$show_err
+      puts @err unless expect_err || @err.empty?
       @out
     end
     bang :sys_exec
@@ -171,7 +168,5 @@ module Spec
     ensure
       ENV.replace(backup)
     end
-
-
   end
 end

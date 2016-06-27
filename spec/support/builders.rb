@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Spec
   # These helpers are from bundler's specs
   module Builders
@@ -10,12 +12,11 @@ module Spec
         lib_path = Dir["#{Path.root}/pkg/bundler-source-mercurial*.gem"].first
 
         if lib_path
-          FileUtils.mkdir_p("#{gem_repo1 }/gems")
+          FileUtils.mkdir_p("#{gem_repo1}/gems")
           FileUtils.cp lib_path, "#{gem_repo1}/gems/"
         else
           abort "You need to build the gem first. Run `rake build` and try again."
         end
-
       end
     end
 
@@ -92,9 +93,9 @@ module Spec
 
         if options[:rubygems_version]
           @spec.rubygems_version = options[:rubygems_version]
-          def @spec.mark_version; end
+          @spec.mark_version = -> {}
 
-          def @spec.validate; end
+          @spec.validate = -> {}
         end
 
         case options[:gemspec]

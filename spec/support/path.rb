@@ -38,7 +38,7 @@ module Spec
 
     # Workarounds till source plugins get merged with master
     def bundle_lib
-      @bundle_lib ||= ENV['BUNDLE_LIB'] || root.join("../bundler/lib")
+      @bundle_lib ||= ENV["BUNDLE_LIB"] || root.join("../bundler/lib")
     end
 
     def vendored_gems(path = nil)
