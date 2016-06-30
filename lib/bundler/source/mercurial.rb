@@ -11,6 +11,8 @@ module Bundler
         super
 
         @ref = options["tag"] || options["branch"] || "default"
+        @remote = false
+        @cached = false
       end
 
       def api
@@ -58,6 +60,14 @@ module Bundler
         @revision = latest_revision
       end
 
+      def remote!
+        @remote = true
+      end
+
+      def cached!
+        @cached = true
+      end
+
     private
 
       def cache_path
@@ -66,7 +76,15 @@ module Bundler
 
       def cache_repo
         api.mkdir_p cache_path.dirname
-        `hg clone -U #{uri} #{cache_path} 2>&1`
+        if @remote
+          remote = uri
+        elsif @cached
+          remote = app_cache_path
+        else
+          raise NoSourceError
+        end
+
+        `hg clone -U #{remote} #{cache_path} 2>&1`
       end
 
       def cached?
@@ -90,6 +108,8 @@ module Bundler
       end
 
       def update_cache(revision)
+        cache_repo unless cached?
+
         api.chdir(cache_path) do
           `hg update -r #{revision} 2>&1`
         end
@@ -97,6 +117,13 @@ module Bundler
 
       def repo_name
         File.basename(URI.parse(uri).normalize.path)
+      end
+    end
+
+    # Error representing that no source is available to fetch the mercurial repo
+    class NoSourceError < Bundler::PluginError
+      def initialize
+        super "Neither remote nor cache is enabled"
       end
     end
   end
