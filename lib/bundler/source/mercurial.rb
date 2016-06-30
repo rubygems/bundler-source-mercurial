@@ -22,7 +22,7 @@ module Bundler
           glob = "{,*,*/*}.gemspec"
           cache_repo unless cached?
 
-          path = if installed?
+          path = if installed? && !@unlocked
             install_path
           else
             update_cache revision
@@ -51,6 +51,11 @@ module Bundler
           "revision" => revision,
           "ref" => ref,
         }
+      end
+
+      def unlock!
+        @unlocked = true
+        @revision = latest_revision
       end
 
     private
