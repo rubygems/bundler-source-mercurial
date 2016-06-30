@@ -25,7 +25,7 @@ module Bundler
           path = if installed?
             install_path
           else
-            update_cache changeset
+            update_cache revision
             cache_path
           end
 
@@ -38,7 +38,7 @@ module Bundler
         api.rm_rf(install_path)
         `hg clone #{cache_path} #{install_path}`
         api.chdir install_path do
-          `hg update -r #{changeset} 2>&1`
+          `hg update -r #{revision} 2>&1`
         end
 
         post_install(spec)
@@ -46,9 +46,9 @@ module Bundler
         nil # No post installation message
       end
 
-      def optoins_to_lock
+      def options_to_lock
         {
-          "changeset" => changeset,
+          "revision" => revision,
           "ref" => ref,
         }
       end
@@ -68,15 +68,15 @@ module Bundler
         File.directory?(cache_path)
       end
 
-      def locked_changeset
-        options["changeset"]
+      def locked_revision
+        options["revision"]
       end
 
-      def changeset
-        @changeset ||= locked_changeset || latest_changeset
+      def revision
+        @revision ||= locked_revision || latest_revision
       end
 
-      def latest_changeset
+      def latest_revision
         cache_repo unless cached?
 
         api.chdir(cache_path) do
@@ -84,9 +84,9 @@ module Bundler
         end
       end
 
-      def update_cache(changeset)
+      def update_cache(revision)
         api.chdir(cache_path) do
-          `hg update -r #{changeset} 2>&1`
+          `hg update -r #{revision} 2>&1`
         end
       end
 
