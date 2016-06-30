@@ -41,6 +41,8 @@ module Bundler
           `hg update -r #{changeset} 2>&1`
         end
 
+        post_install(spec)
+
         nil # No post installation message
       end
 
@@ -78,8 +80,7 @@ module Bundler
         cache_repo unless cached?
 
         api.chdir(cache_path) do
-          ENV["HGPLAIN"] = "true"
-          `hg log -r #{ref} -T '{node}' 2>&1`
+          `HGPLAIN=true hg log -r #{ref} -T '{node}' 2>&1`
         end
       end
 
