@@ -15,10 +15,6 @@ module Bundler
         @cached = false
       end
 
-      def api
-        @api ||= Bundler::Plugin::API.new
-      end
-
       def fetch_gemspec_files
         @spec_files ||= begin
           glob = "{,*,*/*}.gemspec"
@@ -38,14 +34,16 @@ module Bundler
       def install(spec, opts)
         api.mkdir_p(install_path.dirname)
         api.rm_rf(install_path)
+
         `hg clone #{cache_path} #{install_path}`
+
         api.chdir install_path do
           `hg update -r #{revision} 2>&1`
         end
 
         post_install(spec)
 
-        nil # No post installation message
+        spec.post_install_message
       end
 
       def options_to_lock
@@ -68,7 +66,21 @@ module Bundler
         @cached = true
       end
 
+      def ==(other)
+        other.is_a?(self.class) && uri == other.uri && ref == other.ref
+      end
+
+      alias_method :eql?, :==
+
+      def hash
+        [self.class, uri, ref].hash
+      end
+
     private
+
+      def api
+        @api ||= Bundler::Plugin::API.new
+      end
 
       def cache_path
         @cache_path ||= api.cache_dir.join("soruce-mercurial", repo_name)
