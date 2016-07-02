@@ -1,2 +1,9 @@
 inherit_from:
 - https://raw.githubusercontent.com/bundler/bundler/master/.rubocop.yml
+
+Style/ModuleFunction:
+  Exclude:
+    - 'spec/support/path.rb'
+
+Metrics/LineLength:
+  Enabled: false
